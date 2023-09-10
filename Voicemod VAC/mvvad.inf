@@ -1,0 +1,139 @@
+[Version]
+Signature="$CHICAGO$"
+Class=MEDIA
+Provider=%VOICEMOD%
+ClassGUID={4d36e96c-e325-11ce-bfc1-08002be10318}
+DriverVer = 06/01/2022,2022.06.01.0
+CatalogFile=mvvad.cat
+
+[SourceDisksNames]
+222="Voicemod Driver Disk","",222
+
+[SourceDisksFiles]
+mvvad.sys=222
+
+;;This syntax is only recognized on Windows XP and above- it is needed to install 64-bit drivers on
+;;Windows Server 2003 Service Pack 1 and above.
+
+[Manufacturer]
+%MfgName%=VoicemodDeviceSection,NTAMD64,NTIA64
+
+;;  For Windows Server 2003 Service Pack 1 and above, a 64-bit OS will not install a driver
+;;  unless the Manufacturer and Models Sections explicitly show it is a driver for that platform
+;;  But the individual model section decorations (or lack thereof) work as they always have.
+;;  All of the model sections referred to are undecorated or NT-decorated, hence work on all platforms
+
+[VoicemodDeviceSection]
+%VOICEMOD_Driver.DeviceDesc%=VOICEMOD_Driver,*VMDriver
+
+;; This section enables installing on x64 systems
+
+[VoicemodDeviceSection.NTAMD64]
+%VOICEMOD_Driver.DeviceDesc%=VOICEMOD_Driver,*VMDriver
+
+;;  This section enables installing on Itanium systems
+
+[VoicemodDeviceSection.NTIA64]
+%VOICEMOD_Driver.DeviceDesc%=VOICEMOD_Driver,*VMDriver
+
+[DestinationDirs]
+VOICEMOD_Driver.CopyList=10,system32\drivers
+
+;======================================================
+; VOICEMOD_Driver
+;======================================================
+[VOICEMOD_Driver]
+AlsoInstall=ks.registration(ks.inf),wdmaudio.registration(wdmaudio.inf)
+CopyFiles=VOICEMOD_Driver.CopyList
+AddReg=VOICEMOD_Driver.AddReg
+
+[VOICEMOD_Driver.CopyList]
+mvvad.sys,,,0x00004000
+
+[VOICEMOD_Driver.Interfaces]
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_Wave%,VOICEMOD.I.Wave
+AddInterface=%KSCATEGORY_RENDER%,%KSNAME_Wave%,VOICEMOD.I.Wave
+AddInterface=%KSCATEGORY_CAPTURE%,%KSNAME_Wave%,VOICEMOD.I.Wave
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_Topology%,VOICEMOD.I.Topo
+
+[VOICEMOD_Driver.AddReg]
+HKR,,AssociatedFilters,,"wdmaud,redbook"
+HKR,,Driver,,mvvad.sys
+
+HKR,Drivers,SubClasses,,"wave,mixer"
+
+HKR,Drivers\wave\wdmaud.drv,Driver,,wdmaud.drv
+HKR,Drivers\mixer\wdmaud.drv,Driver,,wdmaud.drv
+
+HKR,Drivers\wave\wdmaud.drv,Description,,%VOICEMOD_Driver.DeviceDesc%
+HKR,Drivers\mixer\wdmaud.drv,Description,,%VOICEMOD_Driver.DeviceDesc%
+
+;======================================================
+; COMMON
+;======================================================
+[VOICEMOD.I.Wave]
+AddReg=VOICEMOD.I.Wave.AddReg
+
+[VOICEMOD.I.Wave.AddReg]
+HKR,,CLSID,,%Proxy.CLSID%
+HKR,,FriendlyName,,%VOICEMOD.Wave.szPname%
+
+[VOICEMOD.I.Topo]
+AddReg=VOICEMOD.I.Topo.AddReg
+
+[VOICEMOD.I.Topo.AddReg]
+HKR,,CLSID,,%Proxy.CLSID%
+HKR,,FriendlyName,,%VOICEMOD.Topo.szPname%
+
+HKR,"EP\\0",%PKEY_AudioEndpoint_Association%,,%KSNODETYPE_ANY%
+HKR,"EP\\0",%PKEY_AudioDevice_NeverSetAsDefaultEndpoint%,0x00010001,0x00000105
+
+;======================================================
+; VOICEMOD_Driver
+;======================================================
+[VOICEMOD_Driver.NT]
+Include=ks.inf,wdmaudio.inf
+Needs=KS.Registration, WDMAUDIO.Registration
+CopyFiles=VOICEMOD_Driver.CopyList
+AddReg=VOICEMOD_Driver.AddReg
+
+[VOICEMOD_Driver.NT.Interfaces]
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_Wave%,VOICEMOD.I.Wave
+AddInterface=%KSCATEGORY_RENDER%,%KSNAME_Wave%,VOICEMOD.I.Wave
+AddInterface=%KSCATEGORY_CAPTURE%,%KSNAME_Wave%,VOICEMOD.I.Wave
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_Topology%,VOICEMOD.I.Topo
+
+[VOICEMOD_Driver.NT.Services]
+AddService=VOICEMOD_Driver,0x00000002,VOICEMOD_Driver_Service_Inst
+
+[VOICEMOD_Driver_Service_Inst]
+DisplayName=%VOICEMOD_Driver.SvcDesc%
+ServiceType=1
+StartType=3
+ErrorControl=1
+ServiceBinary=%10%\system32\drivers\mvvad.sys
+
+;======================================================
+; COMMON
+;======================================================
+[Strings]
+VOICEMOD="Voicemod"
+MfgName="Voicemod S.L."
+VOICEMOD_Driver.DeviceDesc="Voicemod Virtual Audio Device (WDM)"
+
+VOICEMOD.Wave.szPname="Voicemod VAD Wave"
+VOICEMOD.Topo.szPname="Voicemod VAD Topology"
+
+Proxy.CLSID="{17CCA71B-ECD7-11D0-B908-00A0C9223196}"
+KSCATEGORY_AUDIO="{6994AD04-93EF-11D0-A3CC-00A0C9223196}"
+KSCATEGORY_RENDER="{65E8773E-8F56-11D0-A3B9-00A0C9223196}"
+KSCATEGORY_CAPTURE="{65E8773D-8F56-11D0-A3B9-00A0C9223196}"
+
+KSNODETYPE_ANY="{00000000-0000-0000-0000-000000000000}"
+PKEY_AudioEndpoint_Association="{1DA5D803-D492-4EDD-8C23-E0C0FFEE7F0E},2"
+PKEY_AudioDevice_NeverSetAsDefaultEndpoint="{F3E80BEF-1723-4FF2-BCC4-7F83DC5E46D4},3"
+
+KSNAME_Wave="VoicemodWave"
+KSNAME_Topology="VoicemodTopo"
+
+VOICEMOD_Driver.SvcDesc="Voicemod Virtual Audio Device (WDM)"
